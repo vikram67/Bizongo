@@ -2,7 +2,7 @@
 FROM    ubuntu
 
 # File Author / Maintainer
-MAINTAINER Lei Xue
+MAINTAINER nodejs_assessment
 
 # Install Node.js and other dependencies
 RUN apt-get update && \
