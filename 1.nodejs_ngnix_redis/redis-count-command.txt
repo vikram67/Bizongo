@@ -1,0 +1,1 @@
+docker exec -it virkam_redis_1  redis-cli GET counter

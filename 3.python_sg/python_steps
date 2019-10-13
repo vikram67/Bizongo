@@ -1,0 +1,11 @@
+Python script for security group rule which is open to all the world:
+=====================================================================
+
+If anyone add the rule in security_group it would be an compliance issue and where in we have lot security group where we cannot debug each security groupand check the rule 0.0.0.0/0. Here, my solution would be
+
+1. I will go to AWS config page in AWS console. There I will go to settings and create a bucket with an name as my preference "SecurityGroupRule67" and Resource type as AWS::EC2::SecurityGroup and rule as restricted-ssh and setup this rule
+2. Then I will create an Lambda python function "python_security_rule.py"  which inspects and shows 0.0.0.0/0 rule in security group
+3. Then I will go to AWS Lambda page and create an function as "sg_rule_removal" and add an Inline policy "AWSConfigRulesExecuteRole".
+4. After creating Lambda function I would create an cloudwatch events with the rule name where I will add trigger with the Lambda function
+
+The above solution will inspect and remove the 0.0.0.0/0 if added in the security group

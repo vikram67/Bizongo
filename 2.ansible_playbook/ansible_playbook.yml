@@ -1,0 +1,80 @@
+---
+- hosts: webserver
+  become: true
+  vars:
+    users:
+      - "testuser"
+  tasks:
+    - name: "Create user accounts"
+      user:
+         name: "{{ item }}"
+      with_items: "{{ users }}"
+    - name: "create authorized keys file in remote machine"
+      file:
+         path: /home/{{ item }}/.ssh
+         state: directory
+         mode: 0700
+      with_items: "{{ users }}"
+    - name:
+      file:
+         path: /home/{{ item }}/.ssh/authorized_keys
+         state: touch
+         mode: 0644
+      with_items: "{{ users }}"
+    - name: Copy ssh public keys to remote machine
+      copy:
+         src: /root/.ssh/id_rsa.pub
+         dest: /home/{{ item }}/.ssh/authorized_keys
+         backup: yes
+      with_items: "{{ users }}"
+    - name:  SSH port to 10022
+      lineinfile:
+         dest: "/etc/ssh/sshd_config"
+         regexp: "^Port"
+         line: "Port 10022"
+      notify: "Restart sshd"
+    - name: Idle timeout 10 minutes for users
+      lineinfile:
+         dest: "/etc/ssh/sshd_config"
+         regexp: "^ClientAliveInterval"
+         line: "ClientAliveInterval 600"
+    - name: Client alive count set to zero
+      lineinfile:
+         dest: "/etc/ssh/sshd_config"
+         regexp: "^ClientAliveCountMax"
+         line: "ClientAliveCountMax 0"
+    - name: Listen only Ipv4 address
+      lineinfile:
+         dest: "/etc/ssh/sshd_config"
+         regexp: "^AddressFamily"
+         line: "AddressFamily inet"
+      notify: "Restart sshd"
+    - name:  Additionally disabling ipv6 address in remote machine
+      shell: echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
+    - name: Additionally disabling ipv6 address in remote machine
+      shell: echo 1 > /proc/sys/net/ipv6/conf/default/disable_ipv6
+    - name: "Allow test users to sudo without a password"
+      lineinfile:
+         dest: "/etc/sudoers" # path: in version 2.3
+         state: "present"
+         regexp: "^testuser"
+         line: "testuser ALL=(ALL) NOPASSWD: ALL"
+  handlers:
+    - name: Restart sshd
+      service:
+         name: sshd
+         state: restarted
+    - name: Security group change in AWS instance
+      ec2_group:
+         name: ssh_security_group
+         description: an example EC2 security group
+         vpc_id: <vpc-..> #vpc id
+         region: eu-west-1
+         aws_secret_key: <secret key> # aws secret key
+         aws_access_key: <access key> # aws access key
+         rules:
+           - proto: tcp
+             from_port: 10022
+             to_port: 10022
+             cidr_ip: <source machine ip> # mention the source ip that you want to add as rule in ingress  security group of the instance
+
