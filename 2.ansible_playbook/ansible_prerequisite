@@ -1,0 +1,23 @@
+Assuming server is on AWS, add a rule to security group to allow access to only your public IP to ssh?
+
+For this we need to have installed boto3 in centos or ubuntu machine. Please install boto3 and excute this ansible yml provided or else you can 
+create an seperate yml for this below code.
+
+command:
+
+ansible-playbook <ansible yml file>
+
+=================================================
+ - name: Security group change in AWS instance
+      ec2_group:
+         name: ssh_security_group
+         description: an example EC2 security group
+         vpc_id: <vpc-..> #vpc id
+         region: eu-west-1
+         aws_secret_key: <secret key> # aws secret key
+         aws_access_key: <access key> # aws access key
+         rules:
+           - proto: tcp
+             from_port: 10022
+             to_port: 10022
+             cidr_ip: <source machine ip> # mention the source ip that you want to add as rule in ingress  security group of the instance
